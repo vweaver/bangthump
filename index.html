@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bang–Thump Distance Calculator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      line-height: 1.4;
+    }
+    label {
+      display: inline-block;
+      width: 250px;
+      margin-bottom: 0.5em;
+    }
+    input[type="text"] {
+      width: 80px;
+      text-align: right;
+    }
+    .param-row {
+      margin: 8px 0;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Bang–Thump Distance Calculator</h1>
+
+<div class="param-row">
+  <label for="timeInput">Bang–thump time (seconds):</label>
+  <input type="text" id="timeInput" value="4.0">
+</div>
+
+<div class="param-row">
+  <label for="muzzleVelInput">Muzzle velocity (fps):</label>
+  <input type="text" id="muzzleVelInput" value="1350">
+</div>
+
+<div class="param-row">
+  <label for="downrangeVelInput">Bullet velocity at known distance (fps):</label>
+  <input type="text" id="downrangeVelInput" value="860">
+</div>
+
+<div class="param-row">
+  <label for="downrangeDistInput">Known distance (yards) for that velocity:</label>
+  <input type="text" id="downrangeDistInput" value="600">
+</div>
+
+<div class="param-row">
+  <label for="soundSpeedInput">Speed of sound (fps):</label>
+  <input type="text" id="soundSpeedInput" value="1100">
+</div>
+
+<button onclick="computeDistance()">Calculate Distance</button>
+
+<p id="result"></p>
+
+<script>
+// --- 1) bulletFlightTime() ---
+// Compute time (seconds) for a bullet to travel dYards, given:
+//   - v0_fps = muzzle velocity (fps)
+//   - v1_fps = bullet velocity (fps) measured at d1_yards
+//   - d1_yards = yards at which v1_fps is measured
+// Uses a linear approximation of velocity over distance:
+//   v(x) = v0 + slope*x
+// slope = (v1_fps - v0_fps) / d1_yards
+//
+// The bullet travels from 0 to dYards. We convert yards -> feet by a factor of 3.
+//
+// Time = integral from 0..dYards of (3 dx) / v(x).
+function bulletFlightTime(dYards, v0_fps, v1_fps, d1_yards) {
+  // slope in fps per yard
+  let slope = 0.0;
+  if (d1_yards !== 0) {
+    slope = (v1_fps - v0_fps) / d1_yards;
+  }
+
+  // If slope is almost zero, treat bullet speed as roughly constant = v0_fps
+  if (Math.abs(slope) < 1e-12) {
+    return (dYards * 3.0) / v0_fps;
+  }
+
+  // v(x) = v0 + slope*x
+  // Time = (3 / slope) * ln( (v0 + slope*dYards) / v0 )
+  const numerator = v0_fps + slope * dYards;
+  if (numerator <= 0 || v0_fps <= 0) {
+    // unphysical case
+    return 9999999.0;
+  }
+  return (3.0 / slope) * Math.log(numerator / v0_fps);
+}
+
+// --- 2) totalFlightTime() ---
+// Returns total time (seconds) = bullet flight time + sound travel time.
+// The sound travel time = (dYards * 3 ft/yd) / speedOfSound_fps
+function totalFlightTime(dYards, v0_fps, v1_fps, d1_yards, speedOfSound_fps) {
+  const t_bullet = bulletFlightTime(dYards, v0_fps, v1_fps, d1_yards);
+  const t_sound  = (dYards * 3.0) / speedOfSound_fps;
+  return t_bullet + t_sound;
+}
+
+// --- 3) findDistance() ---
+// Numerically find the distance (yards) that yields T_total = flight_time + sound_time.
+// Uses a simple bisection approach up to a certain iteration count or tolerance.
+function findDistance(
+  T_total,         // total bang-thump time (sec)
+  v0_fps,          // muzzle velocity (fps)
+  v1_fps,          // bullet velocity (fps) at d1_yards
+  d1_yards,        // distance (yards) at which bullet velocity is measured
+  speedOfSound_fps,
+  maxYards = 5000.0 // upper bound for search
+) {
+  let left = 0.0;
+  let right = maxYards;
+  let mid = 0.0;
+
+  for (let i = 0; i < 100; i++) {
+    mid = 0.5 * (left + right);
+    const t = totalFlightTime(mid, v0_fps, v1_fps, d1_yards, speedOfSound_fps);
+
+    if (Math.abs(t - T_total) < 1e-6) {
+      return mid;
+    }
+    if (t < T_total) {
+      left = mid;
+    } else {
+      right = mid;
+    }
+  }
+
+  return 0.5 * (left + right);
+}
+
+// --- 4) computeDistance() ---
+// Reads input from the webpage, calls findDistance(), and displays result.
+function computeDistance() {
+  const timeInput          = document.getElementById("timeInput");
+  const muzzleVelInput     = document.getElementById("muzzleVelInput");
+  const downrangeVelInput  = document.getElementById("downrangeVelInput");
+  const downrangeDistInput = document.getElementById("downrangeDistInput");
+  const soundSpeedInput    = document.getElementById("soundSpeedInput");
+
+  const T_total   = parseFloat(timeInput.value);
+  const v0_fps    = parseFloat(muzzleVelInput.value);
+  const v1_fps    = parseFloat(downrangeVelInput.value);
+  const d1_yards  = parseFloat(downrangeDistInput.value);
+  const c_fps     = parseFloat(soundSpeedInput.value);
+
+  if (
+    isNaN(T_total)  || T_total  <= 0 ||
+    isNaN(v0_fps)   || v0_fps   <= 0 ||
+    isNaN(v1_fps)   || v1_fps   <= 0 ||
+    isNaN(d1_yards) || d1_yards <  0 ||
+    isNaN(c_fps)    || c_fps    <= 0
+  ) {
+    document.getElementById("result").textContent =
+      "Please enter valid positive numbers for all inputs.";
+    return;
+  }
+
+  // Estimate distance
+  const distanceYards = findDistance(T_total, v0_fps, v1_fps, d1_yards, c_fps);
+
+  // Display result
+  document.getElementById("result").textContent =
+    `Estimated distance to target: ${distanceYards.toFixed(1)} yards`;
+}
+</script>
+
+</body>
+</html>

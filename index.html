@@ -20,6 +20,9 @@
                     <div class="select is-fullwidth">
                         <select id="caliberSelect" onchange="loadPreset()">
                             <option value="">Custom Values</option>
+                            <optgroup label="User Presets" id="userPresets">
+                            </optgroup>
+                            <option disabled>──────────</option>
                             <optgroup label="Factory Presets">
                                 <option value=".22 LR">.22 LR</option>
                                 <option value=".223 Remington">.223 Remington</option>
@@ -31,8 +34,6 @@
                                 <option value=".300 Winchester Magnum">.300 Winchester Magnum</option>
                                 <option value="6.5 PRC">6.5 PRC</option>
                                 <option value=".300 RUM">.300 RUM</option>
-                            </optgroup>
-                            <optgroup label="User Presets" id="userPresets">
                             </optgroup>
                         </select>
                     </div>

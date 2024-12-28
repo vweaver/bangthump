@@ -1,19 +1,54 @@
 {
   "calibers": {
+    ".22 LR": {
+      "muzzleVelocity": 1050,
+      "velocity800": 600,
+      "knownDistance": 500
+    },
+    ".223 Remington": {
+      "muzzleVelocity": 3200,
+      "velocity800": 2000,
+      "knownDistance": 500
+    },
+    ".243 Winchester": {
+      "muzzleVelocity": 3000,
+      "velocity800": 2100,
+      "knownDistance": 500
+    },
+    "6.5 Creedmoor": {
+      "muzzleVelocity": 2700,
+      "velocity800": 2100,
+      "knownDistance": 500
+    },
+    ".270 Winchester": {
+      "muzzleVelocity": 3000,
+      "velocity800": 2200,
+      "knownDistance": 500
+    },
     ".308 Winchester": {
       "muzzleVelocity": 2700,
       "velocity800": 1900,
-      "knownDistance": 800
+      "knownDistance": 500
     },
-    "6.5 Creedmoor": {
-      "muzzleVelocity": 2800,
-      "velocity800": 2050,
-      "knownDistance": 800
+    ".30-06 Springfield": {
+      "muzzleVelocity": 2900,
+      "velocity800": 2000,
+      "knownDistance": 500
     },
-    ".223 Remington": {
-      "muzzleVelocity": 3000,
-      "velocity800": 1850,
-      "knownDistance": 800
+    ".300 Winchester Magnum": {
+      "muzzleVelocity": 3200,
+      "velocity800": 2400,
+      "knownDistance": 500
+    },
+    "6.5 PRC": {
+      "muzzleVelocity": 2950,
+      "velocity800": 2200,
+      "knownDistance": 500
+    },
+    ".300 RUM": {
+      "muzzleVelocity": 3200,
+      "velocity800": 2500,
+      "knownDistance": 500
     }
   }
 }

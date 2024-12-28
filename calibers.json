@@ -45,9 +45,9 @@
       "velocity800": 2200,
       "knownDistance": 500
     },
-    ".300 RUM": {
-      "muzzleVelocity": 3200,
-      "velocity800": 2500,
+    "45-70": {
+      "muzzleVelocity": 1925,
+      "velocity800": 823,
       "knownDistance": 500
     }
   }

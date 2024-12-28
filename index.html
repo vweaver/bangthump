@@ -15,6 +15,43 @@
         
         <div class="box">
             <div class="field">
+                <label class="label" for="caliberSelect">Select Preset</label>
+                <div class="control is-expanded">
+                    <div class="select is-fullwidth">
+                        <select id="caliberSelect" onchange="loadPreset()">
+                            <option value="">Custom Values</option>
+                            <optgroup label="Factory Presets">
+                                <option value=".308 Winchester">.308 Winchester</option>
+                                <option value="6.5 Creedmoor">6.5 Creedmoor</option>
+                                <option value=".223 Remington">.223 Remington</option>
+                            </optgroup>
+                            <optgroup label="User Presets" id="userPresets">
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <button class="button is-small is-danger mt-2" onclick="deleteCurrentPreset()" id="deletePresetBtn" style="display: none;">
+                    Delete Selected Preset
+                </button>
+            </div>
+
+            <div class="field">
+                <label class="label">Custom Presets</label>
+                <div class="control">
+                    <div class="field has-addons">
+                        <div class="control">
+                            <input class="input" type="text" id="presetName" placeholder="Preset name">
+                        </div>
+                        <div class="control">
+                            <button class="button is-info" onclick="saveCurrentAsPreset()">
+                                Save Current Values
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
                 <label class="label" for="timeInput">Bang–thump time (seconds)</label>
                 <div class="control">
                     <input class="input" type="number" id="timeInput" value="4.0" step="0.1">
@@ -190,6 +227,116 @@ function computeDistance() {
   resultElement.textContent = `Estimated distance to target: ${distanceYards.toFixed(1)} yards`;
   resultElement.style.display = "block";
 }
+</script>
+
+<script>
+// Load both factory and user presets when page loads
+async function initializePresets() {
+    // Load factory presets
+    try {
+        const response = await fetch('calibers.json');
+        window.factoryPresets = await response.json();
+    } catch (error) {
+        console.error('Error loading factory presets:', error);
+        window.factoryPresets = { calibers: {} };
+    }
+
+    // Load user presets from localStorage
+    const userPresets = getUserPresets();
+    updatePresetDropdown(userPresets);
+}
+
+function getUserPresets() {
+    const presets = localStorage.getItem('userPresets');
+    return presets ? JSON.parse(presets) : {};
+}
+
+function updatePresetDropdown(userPresets) {
+    const userPresetsGroup = document.getElementById('userPresets');
+    userPresetsGroup.innerHTML = ''; // Clear existing options
+    
+    Object.keys(userPresets).forEach(presetName => {
+        const option = document.createElement('option');
+        option.value = 'user:' + presetName;
+        option.textContent = presetName;
+        userPresetsGroup.appendChild(option);
+    });
+}
+
+function saveCurrentAsPreset() {
+    const presetName = document.getElementById('presetName').value.trim();
+    if (!presetName) {
+        alert('Please enter a name for your preset');
+        return;
+    }
+
+    const preset = {
+        muzzleVelocity: parseFloat(document.getElementById('muzzleVelInput').value),
+        velocity800: parseFloat(document.getElementById('downrangeVelInput').value),
+        knownDistance: parseFloat(document.getElementById('downrangeDistInput').value)
+    };
+
+    const userPresets = getUserPresets();
+    userPresets[presetName] = preset;
+    localStorage.setItem('userPresets', JSON.stringify(userPresets));
+    
+    updatePresetDropdown(userPresets);
+    document.getElementById('presetName').value = '';
+    alert('Preset saved successfully!');
+}
+
+function loadPreset() {
+    const select = document.getElementById('caliberSelect');
+    const selectedValue = select.value;
+    const deleteBtn = document.getElementById('deletePresetBtn');
+
+    if (!selectedValue) {
+        deleteBtn.style.display = 'none';
+        return;
+    }
+
+    let preset;
+    if (selectedValue.startsWith('user:')) {
+        // Load user preset
+        const presetName = selectedValue.substring(5);
+        const userPresets = getUserPresets();
+        preset = userPresets[presetName];
+        deleteBtn.style.display = 'block';
+    } else {
+        // Load factory preset
+        preset = window.factoryPresets.calibers[selectedValue];
+        deleteBtn.style.display = 'none';
+    }
+
+    if (preset) {
+        document.getElementById('muzzleVelInput').value = preset.muzzleVelocity;
+        document.getElementById('downrangeVelInput').value = preset.velocity800;
+        document.getElementById('downrangeDistInput').value = preset.knownDistance;
+    }
+}
+
+function deleteCurrentPreset() {
+    const select = document.getElementById('caliberSelect');
+    const selectedValue = select.value;
+    
+    if (!selectedValue.startsWith('user:')) {
+        return; // Can't delete factory presets
+    }
+
+    const presetName = selectedValue.substring(5);
+    const userPresets = getUserPresets();
+    
+    if (confirm(`Are you sure you want to delete the preset "${presetName}"?`)) {
+        delete userPresets[presetName];
+        localStorage.setItem('userPresets', JSON.stringify(userPresets));
+        updatePresetDropdown(userPresets);
+        select.value = '';
+        document.getElementById('deletePresetBtn').style.display = 'none';
+    }
+}
+
+// Initialize presets when page loads
+document.addEventListener('DOMContentLoaded', initializePresets);
 </script>
 
 </body>

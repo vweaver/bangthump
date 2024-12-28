@@ -1,0 +1,19 @@
+{
+  "calibers": {
+    ".308 Winchester": {
+      "muzzleVelocity": 2700,
+      "velocity800": 1900,
+      "knownDistance": 800
+    },
+    "6.5 Creedmoor": {
+      "muzzleVelocity": 2800,
+      "velocity800": 2050,
+      "knownDistance": 800
+    },
+    ".223 Remington": {
+      "muzzleVelocity": 3000,
+      "velocity800": 1850,
+      "knownDistance": 800
+    }
+  }
+}

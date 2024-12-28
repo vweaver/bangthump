@@ -1,72 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Bang–Thump Distance Calculator</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 600px;
-      margin: 40px auto;
-      line-height: 1.4;
-    }
-    label {
-      display: inline-block;
-      width: 250px;
-      margin-bottom: 0.5em;
-    }
-    input[type="text"] {
-      width: 80px;
-      text-align: right;
-    }
-    .param-row {
-      margin: 8px 0;
-    }
-    button {
-      padding: 6px 12px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    #result {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bang–Thump Distance Calculator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
 </head>
 <body>
+<section class="section">
+    <div class="container">
+        <h1 class="title is-3">Bang–Thump Distance Calculator</h1>
+        
+        <div class="box">
+            <div class="field">
+                <label class="label" for="timeInput">Bang–thump time (seconds)</label>
+                <div class="control">
+                    <input class="input" type="number" id="timeInput" value="4.0" step="0.1">
+                </div>
+            </div>
 
-<h1>Bang–Thump Distance Calculator</h1>
+            <div class="field">
+                <label class="label" for="muzzleVelInput">Muzzle velocity (fps)</label>
+                <div class="control">
+                    <input class="input" type="number" id="muzzleVelInput" value="1350">
+                </div>
+            </div>
 
-<div class="param-row">
-  <label for="timeInput">Bang–thump time (seconds):</label>
-  <input type="text" id="timeInput" value="4.0">
-</div>
+            <div class="field">
+                <label class="label" for="downrangeVelInput">Bullet velocity at known distance (fps)</label>
+                <div class="control">
+                    <input class="input" type="number" id="downrangeVelInput" value="860">
+                </div>
+            </div>
 
-<div class="param-row">
-  <label for="muzzleVelInput">Muzzle velocity (fps):</label>
-  <input type="text" id="muzzleVelInput" value="1350">
-</div>
+            <div class="field">
+                <label class="label" for="downrangeDistInput">Known distance (yards) for that velocity</label>
+                <div class="control">
+                    <input class="input" type="number" id="downrangeDistInput" value="600">
+                </div>
+            </div>
 
-<div class="param-row">
-  <label for="downrangeVelInput">Bullet velocity at known distance (fps):</label>
-  <input type="text" id="downrangeVelInput" value="860">
-</div>
+            <div class="field">
+                <label class="label" for="soundSpeedInput">Speed of sound (fps)</label>
+                <div class="control">
+                    <input class="input" type="number" id="soundSpeedInput" value="1100">
+                </div>
+            </div>
 
-<div class="param-row">
-  <label for="downrangeDistInput">Known distance (yards) for that velocity:</label>
-  <input type="text" id="downrangeDistInput" value="600">
-</div>
+            <div class="field is-grouped mt-4">
+                <div class="control">
+                    <button class="button is-primary" onclick="computeDistance()">Calculate Distance</button>
+                </div>
+                <div class="control">
+                    <button class="button" onclick="resetForm()">Reset</button>
+                </div>
+            </div>
 
-<div class="param-row">
-  <label for="soundSpeedInput">Speed of sound (fps):</label>
-  <input type="text" id="soundSpeedInput" value="1100">
-</div>
-
-<button onclick="computeDistance()">Calculate Distance</button>
-
-<p id="result"></p>
+            <div id="result" class="notification mt-4" style="display: none;"></div>
+        </div>
+    </div>
+</section>
 
 <script>
+function resetForm() {
+    document.getElementById("timeInput").value = "4.0";
+    document.getElementById("muzzleVelInput").value = "1350";
+    document.getElementById("downrangeVelInput").value = "860";
+    document.getElementById("downrangeDistInput").value = "600";
+    document.getElementById("soundSpeedInput").value = "1100";
+    
+    const resultElement = document.getElementById("result");
+    resultElement.style.display = "none";
+    resultElement.textContent = "";
+    resultElement.className = "notification mt-4";
+}
+
 // --- 1) bulletFlightTime() ---
 // Compute time (seconds) for a bullet to travel dYards, given:
 //   - v0_fps = muzzle velocity (fps)
@@ -164,8 +172,10 @@ function computeDistance() {
     isNaN(d1_yards) || d1_yards <  0 ||
     isNaN(c_fps)    || c_fps    <= 0
   ) {
-    document.getElementById("result").textContent =
-      "Please enter valid positive numbers for all inputs.";
+    const resultElement = document.getElementById("result");
+    resultElement.className = "notification is-danger mt-4";
+    resultElement.textContent = "Please enter valid positive numbers for all inputs.";
+    resultElement.style.display = "block";
     return;
   }
 
@@ -173,8 +183,10 @@ function computeDistance() {
   const distanceYards = findDistance(T_total, v0_fps, v1_fps, d1_yards, c_fps);
 
   // Display result
-  document.getElementById("result").textContent =
-    `Estimated distance to target: ${distanceYards.toFixed(1)} yards`;
+  const resultElement = document.getElementById("result");
+  resultElement.className = "notification is-success mt-4";
+  resultElement.textContent = `Estimated distance to target: ${distanceYards.toFixed(1)} yards`;
+  resultElement.style.display = "block";
 }
 </script>
 
